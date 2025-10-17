@@ -10,7 +10,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name="collab-tunnel",
     version="1.0.0",
-    author="Antun Jurkovic",
+    author="Antun Jurkovikj",
     author_email="antunjurkovic@gmail.com",
     description="Python client library for the Collaboration Tunnel Protocol (TCT)",
     long_description=long_description,

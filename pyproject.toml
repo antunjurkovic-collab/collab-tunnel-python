@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.7"
 license = {text = "MIT"}
 authors = [
-    {name = "Antun Jurkovic", email = "antunjurkovic@gmail.com"}
+    {name = "Antun Jurkovikj", email = "antunjurkovic@gmail.com"}
 ]
 keywords = ["ai", "crawler", "optimization", "bandwidth", "llm", "http", "protocol"]
 classifiers = [
