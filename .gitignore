@@ -39,3 +39,8 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+
+# Internal docs (not for users)
+PUBLISHING_GUIDE.md
+QUICK_ANSWER.md
+SSH_SETUP.md

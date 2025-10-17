@@ -10,12 +10,12 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name="collab-tunnel",
     version="1.0.0",
-    author="Antun Jurkovikj",
-    author_email="antun@llmpages.org",
+    author="Antun Jurkovic",
+    author_email="antunjurkovic@gmail.com",
     description="Python client library for the Collaboration Tunnel Protocol (TCT)",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/collab-tunnel-python",
+    url="https://github.com/antunjurkovic-collab/collab-tunnel-python",
     packages=find_packages(),
     keywords=["ai", "crawler", "optimization", "bandwidth", "llm", "http", "protocol"],
     classifiers=[
@@ -35,8 +35,8 @@ setup(
     project_urls={
         "Homepage": "https://llmpages.org",
         "Documentation": "https://llmpages.org/docs/python/",
-        "Repository": "https://github.com/yourusername/collab-tunnel-python",
-        "Bug Tracker": "https://github.com/yourusername/collab-tunnel-python/issues",
+        "Repository": "https://github.com/antunjurkovic-collab/collab-tunnel-python",
+        "Bug Tracker": "https://github.com/antunjurkovic-collab/collab-tunnel-python/issues",
     },
     python_requires=">=3.7",
     install_requires=[

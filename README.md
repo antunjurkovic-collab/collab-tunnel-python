@@ -163,17 +163,16 @@ MIT License - See LICENSE file for details
 ## Links
 
 - **Website**: https://llmpages.org
-- **GitHub**: https://github.com/yourusername/collab-tunnel-python
+- **GitHub**: https://github.com/antunjurkovic-collab/collab-tunnel-python
 - **PyPI**: https://pypi.org/project/collab-tunnel/
 - **Documentation**: https://llmpages.org/docs/python/
 - **Patent**: US 63/895,763 (Provisional, filed October 2025)
 
 ## Contributing
 
-Contributions welcome! Please see CONTRIBUTING.md for guidelines.
+Contributions welcome! Please open an issue or submit a pull request.
 
 ## Support
 
-- **Issues**: https://github.com/yourusername/collab-tunnel-python/issues
-- **Email**: antun@llmpages.org
-- **Discord**: https://discord.gg/collabtunnel
+- **Issues**: https://github.com/antunjurkovic-collab/collab-tunnel-python/issues
+- **Email**: antunjurkovic@gmail.com

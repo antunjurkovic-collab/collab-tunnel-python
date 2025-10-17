@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.7"
 license = {text = "MIT"}
 authors = [
-    {name = "Antun Jurkovikj", email = "antun@llmpages.org"}
+    {name = "Antun Jurkovic", email = "antunjurkovic@gmail.com"}
 ]
 keywords = ["ai", "crawler", "optimization", "bandwidth", "llm", "http", "protocol"]
 classifiers = [
@@ -42,8 +42,8 @@ dev = [
 [project.urls]
 Homepage = "https://llmpages.org"
 Documentation = "https://llmpages.org/docs/python/"
-Repository = "https://github.com/yourusername/collab-tunnel-python"
-"Bug Tracker" = "https://github.com/yourusername/collab-tunnel-python/issues"
+Repository = "https://github.com/antunjurkovic-collab/collab-tunnel-python"
+"Bug Tracker" = "https://github.com/antunjurkovic-collab/collab-tunnel-python/issues"
 
 [project.scripts]
 collab-tunnel = "collab_tunnel.cli:main"
