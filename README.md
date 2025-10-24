@@ -86,11 +86,11 @@ validator = ContentValidator()
 
 # Check headers
 headers = {
-    'Content-Type': 'application/json',
-    'ETag': '"sha256-abc123..."',
+    'Content-Type': 'application/json; charset=UTF-8',
+    'ETag': 'W/"sha256-abc123..."',
     'Link': '<https://example.com/post/>; rel="canonical"',
-    'Cache-Control': 'must-revalidate',
-    'Vary': 'Accept'
+    'Cache-Control': 'max-age=0, must-revalidate, stale-while-revalidate=60, stale-if-error=86400',
+    'Vary': 'Accept-Encoding'
 }
 
 results = validator.check_headers(headers)
@@ -109,8 +109,8 @@ The Collaboration Tunnel Protocol (TCT) enables efficient content delivery throu
    - M-URL → C-URL via `Link: <C-URL>; rel="canonical"` header
 
 2. **Template-Invariant Fingerprinting**
-   - Content normalized (lowercase, whitespace collapse)
-   - SHA-256 hash used as ETag
+   - Content normalized through 7-step pipeline (strip HTML, decode entities, lowercase, collapse whitespace, remove punctuation, trim, SHA-256 hash)
+   - Weak ETag format: `W/"sha256-..."`
    - Stable across theme changes
 
 3. **Sitemap-First Verification**
@@ -120,6 +120,54 @@ The Collaboration Tunnel Protocol (TCT) enables efficient content delivery throu
 4. **Conditional Request Discipline**
    - If-None-Match takes precedence
    - 304 Not Modified for unchanged content
+
+## Response Format
+
+### M-URL JSON Payload
+
+```json
+{
+  "profile": "tct-1",
+  "llm_url": "https://example.com/post/llm/",
+  "canonical_url": "https://example.com/post/",
+  "hash": "sha256-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "title": "Article Title",
+  "content": {"text": "Article content..."},
+  "modified": "2025-10-23T18:00:00Z"
+}
+```
+
+**Profile Field**: `"profile": "tct-1"` enables protocol versioning for future compatibility.
+
+### HTTP Headers
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=UTF-8
+Link: <https://example.com/post/>; rel="canonical"
+ETag: W/"sha256-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+Cache-Control: max-age=0, must-revalidate, stale-while-revalidate=60, stale-if-error=86400
+Vary: Accept-Encoding
+```
+
+**Weak ETag Format**: `W/"sha256-..."` signals semantic (not byte-for-byte) equivalence, per RFC 9110 Section 8.8.1.
+
+### Sitemap Format
+
+```json
+{
+  "version": 1,
+  "profile": "tct-1",
+  "items": [
+    {
+      "cUrl": "https://example.com/post/",
+      "mUrl": "https://example.com/post/llm/",
+      "modified": "2025-10-23T18:00:00Z",
+      "contentHash": "sha256-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
+```
 
 ## API Reference
 
