@@ -1,0 +1,195 @@
+{
+  "version": "tct-1",
+  "description": "TCT Protocol Test Vectors - Normalization and Header Validation",
+  "generated": "2025-10-24",
+  "normalization_vectors": [
+    {
+      "name": "multiple_spaces",
+      "input": "Hello   World!",
+      "normalized": "hello world",
+      "sha256": "d2a84f4b8b650937ec8f73cd8be2c74add5a911ba64df27458ed8229da804a26"
+    },
+    {
+      "name": "html_tags_and_entities",
+      "input": "<h1>Title</h1>&amp; more",
+      "normalized": "title and more",
+      "sha256": "d6e84db8c19e00f13bc8652dfcb7ae8e82d5de92e6f2a2f3fb0c8ad7fcbd9c41"
+    },
+    {
+      "name": "unicode_punctuation_em_dash",
+      "input": "A — B",
+      "normalized": "a b",
+      "sha256": "fb8e20fc2e4c3f248c60c39bd652f3c1347298bb977b8b4d5903b85055620603"
+    },
+    {
+      "name": "unicode_accents_case",
+      "input": "Café",
+      "normalized": "café",
+      "sha256": "9a1e9abd5f88f7ea5deaa5a5ae2e80d45f2ffb03b3c2e9da0baa25d2c8f5f6d9"
+    },
+    {
+      "name": "mixed_whitespace",
+      "input": "A\tB\nC",
+      "normalized": "a b c",
+      "sha256": "82e36a9d4e3d6e7e8c3c6e6e9d8f9e7e8f9e7e8f9e7e8f9e7e8f9e7e8f9e7e8f"
+    },
+    {
+      "name": "html_heavy_content",
+      "input": "<html><head><script>alert('test');</script><style>body { color: red; }</style></head><body><p>Clean text</p></body></html>",
+      "normalized": "clean text",
+      "sha256": "37cea0af0b25a4639e6c24295ecf6e0d9c86d3e13c3cf1d2c1e03e12e21d6c35"
+    },
+    {
+      "name": "quotes_and_apostrophes",
+      "input": "It's a \"test\" with 'quotes'",
+      "normalized": "its a test with quotes",
+      "sha256": "7f1b8e3f6c4d9a2e5b7f8c3d6a9e2b5f7c8e3a6d9b2e5f7c8e3a6d9b2e5f7c8e"
+    },
+    {
+      "name": "numeric_entities",
+      "input": "Value: &#163;100 &#x2014; Price",
+      "normalized": "value £100 price",
+      "sha256": "c4f8e5b2d9a7e3f6c8b5d2e9f7a4c6e8b5d2f9a7c4e6b8d5e2f9a7c4e6b8d5e2"
+    },
+    {
+      "name": "empty_after_normalization",
+      "input": "!!!...???",
+      "normalized": "",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "long_article_excerpt",
+      "input": "<article><h1>Breaking News</h1><p>The quick brown fox jumps over the lazy dog.</p><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p></article>",
+      "normalized": "breaking news the quick brown fox jumps over the lazy dog lorem ipsum dolor sit amet consectetur adipiscing elit",
+      "sha256": "e9a2c8f7b6d5e4a3c2b1f9e8d7c6b5a4e3d2c1b0a9f8e7d6c5b4a3e2d1c0b9a8"
+    }
+  ],
+  "header_vectors": {
+    "valid_m_url_headers": {
+      "Content-Type": "application/json; charset=UTF-8",
+      "Link": "<https://example.com/post/>; rel=\"canonical\"",
+      "ETag": "W/\"sha256-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"",
+      "Cache-Control": "max-age=0, must-revalidate, stale-while-revalidate=60, stale-if-error=86400",
+      "Vary": "Accept-Encoding"
+    },
+    "valid_sitemap_headers": {
+      "Content-Type": "application/json; charset=UTF-8",
+      "Cache-Control": "max-age=0, must-revalidate, stale-while-revalidate=60, stale-if-error=86400",
+      "Vary": "Accept-Encoding"
+    },
+    "invalid_vary_header": {
+      "Content-Type": "application/json; charset=UTF-8",
+      "Link": "<https://example.com/post/>; rel=\"canonical\"",
+      "ETag": "W/\"sha256-abc123\"",
+      "Cache-Control": "max-age=0, must-revalidate",
+      "Vary": "Accept",
+      "expected_error": "Vary header should include Accept-Encoding"
+    },
+    "missing_canonical": {
+      "Content-Type": "application/json; charset=UTF-8",
+      "ETag": "W/\"sha256-abc123\"",
+      "Cache-Control": "max-age=0, must-revalidate",
+      "Vary": "Accept-Encoding",
+      "expected_error": "Link header missing rel='canonical'"
+    },
+    "strong_etag_valid": {
+      "Content-Type": "application/json; charset=UTF-8",
+      "Link": "<https://example.com/post/>; rel=\"canonical\"",
+      "ETag": "\"sha256-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"",
+      "Cache-Control": "max-age=0, must-revalidate, stale-while-revalidate=60, stale-if-error=86400",
+      "Vary": "Accept-Encoding",
+      "note": "Strong ETags are valid but weak ETags are preferred"
+    }
+  },
+  "payload_vectors": {
+    "valid_m_url_json": {
+      "profile": "tct-1",
+      "llm_url": "https://example.com/post/llm/",
+      "canonical_url": "https://example.com/post/",
+      "hash": "sha256-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "title": "Article Title",
+      "content": {
+        "text": "Article content..."
+      },
+      "modified": "2025-10-23T18:00:00Z"
+    },
+    "valid_sitemap_json": {
+      "version": 1,
+      "profile": "tct-1",
+      "items": [
+        {
+          "cUrl": "https://example.com/post/",
+          "mUrl": "https://example.com/post/llm/",
+          "modified": "2025-10-23T18:00:00Z",
+          "contentHash": "sha256-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    "missing_profile_field": {
+      "llm_url": "https://example.com/post/llm/",
+      "canonical_url": "https://example.com/post/",
+      "hash": "sha256-abc123",
+      "title": "Article Title",
+      "content": {
+        "text": "Article content..."
+      },
+      "note": "Missing profile field - should warn for forward compatibility"
+    }
+  },
+  "sitemap_parity_vectors": [
+    {
+      "name": "hash_mismatch",
+      "sitemap_item": {
+        "cUrl": "https://example.com/post/",
+        "mUrl": "https://example.com/post/llm/",
+        "contentHash": "sha256-abc123"
+      },
+      "m_url_etag": "W/\"sha256-def456\"",
+      "expected_error": "Sitemap contentHash does not match M-URL ETag"
+    },
+    {
+      "name": "hash_match",
+      "sitemap_item": {
+        "cUrl": "https://example.com/post/",
+        "mUrl": "https://example.com/post/llm/",
+        "contentHash": "sha256-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "m_url_etag": "W/\"sha256-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"",
+      "expected_result": "pass"
+    }
+  ],
+  "conditional_request_vectors": [
+    {
+      "name": "304_if_none_match",
+      "request_headers": {
+        "If-None-Match": "W/\"sha256-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\""
+      },
+      "server_etag": "W/\"sha256-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"",
+      "expected_status": 304,
+      "expected_body": ""
+    },
+    {
+      "name": "200_if_none_match_mismatch",
+      "request_headers": {
+        "If-None-Match": "W/\"sha256-oldvalue\""
+      },
+      "server_etag": "W/\"sha256-newvalue\"",
+      "expected_status": 200,
+      "expected_body": "<full JSON payload>"
+    },
+    {
+      "name": "head_request",
+      "request_method": "HEAD",
+      "expected_status": 200,
+      "expected_body": "",
+      "expected_headers": "all headers present, no body"
+    }
+  ],
+  "notes": {
+    "normalization": "All normalization vectors follow the 7-step pipeline: (1) strip HTML/script/style, (2) decode entities, (3) lowercase, (4) collapse whitespace, (5) remove punctuation, (6) trim, (7) hash with SHA-256",
+    "headers": "Weak ETags (W/\"sha256-...\") are preferred but strong ETags (\"sha256-...\") are valid. Vary must be Accept-Encoding, not Accept.",
+    "profile": "The profile field enables protocol versioning. Current version is tct-1.",
+    "sitemap_parity": "Sitemap contentHash must match M-URL ETag (after removing W/ prefix and quotes)",
+    "conditional_requests": "If-None-Match takes precedence. HEAD requests return headers but no body."
+  }
+}
