@@ -100,6 +100,33 @@ else:
     print("❌ Errors:", results['errors'])
 ```
 
+### Validate Profile Field
+
+```python
+from collab_tunnel import CollabTunnelCrawler
+
+crawler = CollabTunnelCrawler()
+
+# Fetch M-URL content
+content = crawler.fetch_content("https://example.com/post/llm/")
+
+# Check profile field
+profile = content.get('profile')
+if profile == 'tct-1':
+    print("✅ Recognized protocol version: tct-1")
+elif profile:
+    print(f"⚠️ Unknown protocol version: {profile} (forward compatibility)")
+    # Future versions - client can decide how to handle
+else:
+    print("⚠️ No profile field (legacy or non-compliant endpoint)")
+
+# Validate sitemap profile
+sitemap = crawler.fetch_sitemap("https://example.com/llm-sitemap.json")
+sitemap_profile = sitemap.data.get('profile')
+if sitemap_profile == 'tct-1':
+    print("✅ Sitemap protocol version: tct-1")
+```
+
 ## Protocol Overview
 
 The Collaboration Tunnel Protocol (TCT) enables efficient content delivery through:
