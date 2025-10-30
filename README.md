@@ -1,6 +1,6 @@
 # Collaboration Tunnel Protocol - Python Client
 
-A Python library for efficiently crawling websites that implement the Collaboration Tunnel Protocol (TCT), achieving 60-90% bandwidth savings through sitemap-first discovery and conditional requests.
+A Python library for efficiently crawling websites that implement the Collaboration Tunnel Protocol (TCT), achieving up to 90% bandwidth savings through sitemap-first discovery and conditional requests.
 
 ## Installation
 
@@ -136,7 +136,7 @@ The Collaboration Tunnel Protocol (TCT) enables efficient content delivery throu
    - M-URL → C-URL via `Link: <C-URL>; rel="canonical"` header
 
 2. **Template-Invariant Fingerprinting**
-   - Content normalized through 6-step pipeline (decode entities, NFKC, casefold, remove control chars, collapse ASCII whitespace, trim, SHA-256 hash)
+   - Content normalized through 6-step pipeline: decode entities, NFKC, casefold, remove Cc (except TAB/LF/CR), collapse ASCII whitespace, trim; then SHA-256
    - Weak ETag format: `W/"sha256-..."`
    - Stable across theme changes
 
