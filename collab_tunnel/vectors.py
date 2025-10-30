@@ -14,8 +14,9 @@ def normalize_minimal(text: str) -> str:
     text = html.unescape(text)
     text = unicodedata.normalize('NFKC', text)
     text = text.casefold()
-    text = ''.join(ch for ch in text if unicodedata.category(ch) != 'Cc')
-    text = re.sub(r'[ \t\n\r\f]+', ' ', text)
+    preserved_cc = {chr(9), chr(10), chr(13)}  # TAB, LF, CR
+    text = ''.join(ch for ch in text if unicodedata.category(ch) != 'Cc' or ch in preserved_cc)
+    text = re.sub(r'[ \t\n\r]+', ' ', text)
     return text.strip()
 
 
@@ -38,6 +39,7 @@ def demo() -> List[Dict[str, str]]:
         "A non-breaking B space &amp; HTML -- entity",
         "  Trim  both  ends  ",
         "Line 1\nLine 2\r\nLine 3\tEnd",
+        "Hello\fWorld\fTest",  # Form Feed test (U+000C)
     ]
     return [compute(c) for c in cases]
 

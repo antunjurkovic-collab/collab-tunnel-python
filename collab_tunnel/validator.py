@@ -68,8 +68,8 @@ class ContentValidator:
         1. Decode HTML entities (&amp; → &, &#x2014; → —)
         2. Apply Unicode NFKC normalization
         3. Apply Unicode case folding (locale-independent lowercase)
-        4. Remove control characters (Unicode category Cc)
-        5. Collapse ASCII whitespace to single space
+        4. Remove control characters (Unicode category Cc), except TAB, LF, CR
+        5. Collapse ASCII whitespace (SPACE, TAB, LF, CR) to single space
         6. Trim leading/trailing whitespace
 
         Args:
@@ -81,8 +81,9 @@ class ContentValidator:
         text = html.unescape(text)
         text = unicodedata.normalize('NFKC', text)
         text = text.casefold()
-        text = ''.join(ch for ch in text if unicodedata.category(ch) != 'Cc')
-        text = re.sub(r'[ \t\n\r\f]+', ' ', text)
+        preserved_cc = {chr(9), chr(10), chr(13)}  # TAB, LF, CR
+        text = ''.join(ch for ch in text if unicodedata.category(ch) != 'Cc' or ch in preserved_cc)
+        text = re.sub(r'[ \t\n\r]+', ' ', text)
         return text.strip()
 
 
