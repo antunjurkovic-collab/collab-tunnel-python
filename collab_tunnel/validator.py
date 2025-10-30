@@ -12,85 +12,79 @@ from typing import Dict, Any, List, Optional
 class ContentValidator:
     """
     Validates TCT protocol compliance and content integrity.
+    Default compliance uses parity-only checks; normalization is for diagnostics.
     """
 
     @staticmethod
     def validate_etag(etag: str, content: str) -> bool:
         """
-        Validate that ETag matches content hash.
+        Diagnostic validation by recomputing hash from content text.
+        Not used for compliance. Prefer validate_parity for compliance checks.
 
         Args:
             etag: ETag header value (e.g., W/"sha256-abc123..." or "sha256-abc123...")
-            content: Content text to hash
+            content: Content text to hash for diagnostics
 
         Returns:
-            True if ETag matches content hash
+            True if recomputed hash matches ETag
         """
-        # Extract hash from ETag (remove W/ prefix, quotes, and sha256- prefix)
-        etag_clean = etag
-        if etag_clean.startswith('W/'):
-            etag_clean = etag_clean[2:]  # Strip weak prefix
-        etag_hash = etag_clean.replace('"', '').replace('sha256-', '')
-
-        # Normalize content (lowercase, collapse whitespace)
-        normalized = ContentValidator.normalize_text(content)
-
-        # Compute SHA256
+        etag_clean = ContentValidator.clean_etag(etag)
+        etag_hex = etag_clean.replace('sha256-', '')
+        normalized = ContentValidator.normalize_minimal(content)
         computed_hash = hashlib.sha256(normalized.encode('utf-8')).hexdigest()
-
-        return etag_hash == computed_hash
+        return etag_hex == computed_hash
 
     @staticmethod
-    def normalize_text(text: str) -> str:
+    def clean_etag(etag: str) -> str:
+        """Return ETag's hash as 'sha256-<64hex>' (strip W/ and quotes)."""
+        e = etag.strip()
+        if e.startswith('W/'):
+            e = e[2:]
+        e = e.strip('"')
+        if len(e) == 64 and all(c in '0123456789abcdef' for c in e.lower()):
+            return f'sha256-{e}'
+        return e
+
+    @staticmethod
+    def validate_parity(sitemap_hash: str, etag: str, payload_hash: str) -> bool:
         """
-        Normalize text following TCT 7-step normalization pipeline:
-        1. Strip HTML tags and script/style elements
-        2. Decode HTML entities (&amp; → &, &#x2014; → —)
-        3. Convert to lowercase (Unicode-aware)
-        4. Collapse whitespace to single space (\\s+ → " ")
-        5. Remove punctuation/symbols (Unicode P,S categories)
+        Compliance check: sitemap contentHash == clean(ETag) == payload.hash
+        """
+        s = sitemap_hash.strip().strip('"')
+        if len(s) == 64 and all(c in '0123456789abcdef' for c in s.lower()):
+            s = f'sha256-{s}'
+        e = ContentValidator.clean_etag(etag)
+        p = payload_hash.strip().strip('"')
+        if len(p) == 64 and all(c in '0123456789abcdef' for c in p.lower()):
+            p = f'sha256-{p}'
+        return s == e == p
+
+    @staticmethod
+    def normalize_minimal(text: str) -> str:
+        """
+        Normalize plain-text content following TCT spec (diagnostics only).
+
+        6-step normalization pipeline:
+        1. Decode HTML entities (&amp; → &, &#x2014; → —)
+        2. Apply Unicode NFKC normalization
+        3. Apply Unicode case folding (locale-independent lowercase)
+        4. Remove control characters (Unicode category Cc)
+        5. Collapse ASCII whitespace to single space
         6. Trim leading/trailing whitespace
-        7. Ready for SHA-256 hashing
 
         Args:
-            text: Input text (may contain HTML)
+            text: Plain-text content string (no HTML markup)
 
         Returns:
-            Normalized text ready for hashing
+            Normalized text ready for SHA-256 hashing
         """
-        # Step 1: Strip HTML tags (including script/style content)
-        # Remove script and style tags entirely
-        text = re.sub(r'<script[^>]*>.*?</script>', '', text, flags=re.DOTALL | re.IGNORECASE)
-        text = re.sub(r'<style[^>]*>.*?</style>', '', text, flags=re.DOTALL | re.IGNORECASE)
-        # Remove all other HTML tags
-        text = re.sub(r'<[^>]+>', '', text)
-
-        # Step 2: Decode HTML entities
         text = html.unescape(text)
+        text = unicodedata.normalize('NFKC', text)
+        text = text.casefold()
+        text = ''.join(ch for ch in text if unicodedata.category(ch) != 'Cc')
+        text = re.sub(r'[ \t\n\r\f]+', ' ', text)
+        return text.strip()
 
-        # Step 3: Convert to lowercase (Unicode-aware)
-        text = text.lower()
-
-        # Step 4: Collapse whitespace to single space
-        text = re.sub(r'\s+', ' ', text)
-
-        # Step 5: Remove punctuation and symbols (Unicode categories P and S)
-        # Unicode categories: P = Punctuation, S = Symbols
-        text = ''.join(
-            char if unicodedata.category(char) not in ('Pc', 'Pd', 'Pe', 'Pf', 'Pi', 'Po', 'Ps',
-                                                         'Sc', 'Sk', 'Sm', 'So')
-            else ' '
-            for char in text
-        )
-
-        # Re-collapse whitespace after punctuation removal
-        text = re.sub(r'\s+', ' ', text)
-
-        # Step 6: Trim leading/trailing whitespace
-        text = text.strip()
-
-        # Step 7: Ready for SHA-256 (caller handles hashing)
-        return text
 
     @staticmethod
     def check_headers(headers: Dict[str, str]) -> Dict[str, Any]:
@@ -213,3 +207,16 @@ class ContentValidator:
                 results['valid'] = False
 
         return results
+
+    @staticmethod
+    def check_head_get_parity(get_headers: Dict[str, str], head_headers: Dict[str, str]) -> Dict[str, Any]:
+        """Verify HEAD returns the same key headers as GET (no body expected)."""
+        keys = ['content-type', 'etag', 'link', 'cache-control', 'vary']
+        out = {'parity': True, 'mismatches': []}
+        gl = {k.lower(): v for k, v in get_headers.items()}
+        hl = {k.lower(): v for k, v in head_headers.items()}
+        for k in keys:
+            if gl.get(k, '').strip() != hl.get(k, '').strip():
+                out['parity'] = False
+                out['mismatches'].append(k)
+        return out

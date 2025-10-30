@@ -136,7 +136,7 @@ The Collaboration Tunnel Protocol (TCT) enables efficient content delivery throu
    - M-URL → C-URL via `Link: <C-URL>; rel="canonical"` header
 
 2. **Template-Invariant Fingerprinting**
-   - Content normalized through 7-step pipeline (strip HTML, decode entities, lowercase, collapse whitespace, remove punctuation, trim, SHA-256 hash)
+   - Content normalized through 6-step pipeline (decode entities, NFKC, casefold, remove control chars, collapse ASCII whitespace, trim, SHA-256 hash)
    - Weak ETag format: `W/"sha256-..."`
    - Stable across theme changes
 
@@ -159,7 +159,7 @@ The Collaboration Tunnel Protocol (TCT) enables efficient content delivery throu
   "canonical_url": "https://example.com/post/",
   "hash": "sha256-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "title": "Article Title",
-  "content": {"text": "Article content..."},
+  "content": "Article content...",
   "modified": "2025-10-23T18:00:00Z"
 }
 ```
@@ -226,9 +226,11 @@ Vary: Accept-Encoding
 
 **Static Methods:**
 
-- `validate_etag(etag, content)` - Verify ETag matches content
-- `normalize_text(text)` - Normalize text following TCT spec
+- `validate_parity(sitemap_hash, etag, payload_hash)` - Compliance: parity-only check
+- `validate_etag(etag, content)` - Diagnostic: recompute hash from content
+- `normalize_minimal(text)` - Normalization for diagnostics only (6-step TCT spec algorithm)
 - `check_headers(headers)` - Check protocol compliance
+- `check_head_get_parity(get_headers, head_headers)` - Ensure HEAD mirrors GET headers
 - `validate_sitemap_item(item)` - Validate sitemap item structure
 
 ## License
