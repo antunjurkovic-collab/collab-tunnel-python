@@ -22,7 +22,7 @@ class ContentValidator:
         Not used for compliance. Prefer validate_parity for compliance checks.
 
         Args:
-            etag: ETag header value (e.g., W/"sha256-abc123..." or "sha256-abc123...")
+            etag: ETag header value (e.g., "sha256-abc123..." or W/"sha256-abc123...")
             content: Content text to hash for diagnostics
 
         Returns:
@@ -101,7 +101,8 @@ class ContentValidator:
         results = {
             'compliant': True,
             'checks': {},
-            'errors': []
+            'errors': [],
+            'warnings': []
         }
 
         # Check Content-Type
@@ -119,10 +120,15 @@ class ContentValidator:
         results['checks']['etag_weak'] = False
 
         if etag:
-            # Accept both weak (W/"sha256-...") and strong ("sha256-...") ETags
+            # Accept both strong ("sha256-...") and weak (W/"sha256-...") ETags
+            # TCT spec recommends strong ETags for universal cache compatibility
             etag_clean = etag
             if etag_clean.startswith('W/'):
                 results['checks']['etag_weak'] = True
+                results['warnings'].append(
+                    "Weak ETag detected. TCT spec recommends strong ETags ("sha256-...") "
+                    "for universal cache compatibility (LiteSpeed Cache, Varnish, CDNs)."
+                )
                 etag_clean = etag_clean[2:]
 
             results['checks']['etag_format'] = (
