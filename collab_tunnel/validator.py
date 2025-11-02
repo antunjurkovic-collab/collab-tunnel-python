@@ -126,8 +126,8 @@ class ContentValidator:
             if etag_clean.startswith('W/'):
                 results['checks']['etag_weak'] = True
                 results['warnings'].append(
-                    "Weak ETag detected. TCT spec recommends strong ETags ("sha256-...") "
-                    "for universal cache compatibility (LiteSpeed Cache, Varnish, CDNs)."
+                    'Weak ETag detected. TCT spec recommends strong ETags ("sha256-...") '
+                    'for universal cache compatibility (LiteSpeed Cache, Varnish, CDNs).'
                 )
                 etag_clean = etag_clean[2:]
 
