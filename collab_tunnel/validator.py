@@ -1,5 +1,14 @@
 """
-Content validator for TCT protocol
+Content validator for TCT protocol (draft-jurkovikj-collab-tunnel-00)
+
+This validator checks TCT compliance through parity validation:
+Sitemap contentHash == M-URL ETag == JSON payload hash
+
+Supports both hash computation methods:
+- Method A: Canonical JSON Strong-Byte (hash of canonical JSON)
+- Method B: Content-Locked Strong-Content (hash of normalized content)
+
+Both methods produce valid strong ETags per RFC 9110 when JSON is deterministic.
 """
 
 import hashlib
