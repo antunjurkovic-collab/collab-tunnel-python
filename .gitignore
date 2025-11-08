@@ -44,3 +44,9 @@ Thumbs.db
 PUBLISHING_GUIDE.md
 QUICK_ANSWER.md
 SSH_SETUP.md
+
+# Temporary fix scripts
+fix_*.py
+apply_*.py
+minimal_*.py
+final_*.py

@@ -1,5 +1,5 @@
 """
-Collaboration Tunnel Protocol Crawler
+Collaboration Tunnel Protocol Crawler (draft-jurkovikj-collab-tunnel-01)
 Implements efficient web crawling using sitemap-first discovery and conditional requests.
 """
 
@@ -14,7 +14,7 @@ from .validator import ContentValidator
 
 class CollabTunnelCrawler:
     """
-    Main crawler class for TCT protocol.
+    Main crawler class for TCT protocol per draft-01
 
     Example usage:
         crawler = CollabTunnelCrawler()
@@ -22,7 +22,7 @@ class CollabTunnelCrawler:
 
         for item in sitemap.items:
             if crawler.should_fetch(item):
-                content = crawler.fetch_content(item['mUrl'], item['contentHash'])
+                content = crawler.fetch_content(item['mUrl'], item['etag'])
                 # Process content...
     """
 
@@ -80,40 +80,40 @@ class CollabTunnelCrawler:
 
     def should_fetch(self, item: Dict[str, Any]) -> bool:
         """
-        Determine if content should be fetched based on cached hash.
+        Determine if content should be fetched based on cached ETag.
 
-        This implements the "zero-fetch" optimization: if the content hash
-        in the sitemap matches our cached hash, we skip fetching entirely.
+        This implements the "zero-fetch" optimization per draft-01 Section 8.1:
+        if the sitemap etag matches our cached ETag, we skip fetching entirely.
 
         Args:
-            item: Sitemap item with 'mUrl' and 'contentHash' keys
+            item: Sitemap item with 'mUrl' and 'etag' keys
 
         Returns:
             True if content should be fetched, False if it can be skipped
         """
         m_url = item.get('mUrl')
-        new_hash = item.get('contentHash')
+        new_etag = item.get('etag')
 
-        if not m_url or not new_hash:
+        if not m_url or not new_etag:
             return True  # Missing data, fetch to be safe
 
         cached = self.cache.get(m_url)
         if not cached:
             return True  # Not in cache, need to fetch
 
-        if cached.get('contentHash') == new_hash:
-            # Hash matches! Zero-fetch optimization
+        if cached.get('etag') == new_etag:
+            # ETag matches! Zero-fetch optimization (Section 8.1)
             self.stats['zero_fetches'] += 1
             self.stats['bytes_saved'] += cached.get('estimated_size', 30000)
             return False
 
-        return True  # Hash changed, need to fetch
+        return True  # ETag changed, need to fetch
 
     def fetch_content(self,
                      m_url: str,
-                     expected_hash: Optional[str] = None) -> Optional[Dict[str, Any]]:
+                     expected_etag: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """
-        Fetch content from M-URL with conditional request.
+        Fetch content from M-URL with conditional request per draft-01 Section 8.2
 
         Args:
             m_url: Machine-readable endpoint URL

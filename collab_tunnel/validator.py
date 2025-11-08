@@ -1,14 +1,13 @@
 """
-Content validator for TCT protocol (draft-jurkovikj-collab-tunnel-00)
+Content validator for TCT protocol (draft-jurkovikj-collab-tunnel-01)
 
 This validator checks TCT compliance through parity validation:
-Sitemap contentHash == M-URL ETag == JSON payload hash
+Sitemap etag == M-URL ETag == JSON payload hash
 
-Supports both hash computation methods:
-- Method A: Canonical JSON Strong-Byte (hash of canonical JSON)
-- Method B: Content-Locked Strong-Content (hash of normalized content)
+Per draft-01, only Method A is allowed:
+- Method A: Canonical JSON Strong-Byte (hash of canonical JSON, per Section 6.2)
 
-Both methods produce valid strong ETags per RFC 9110 when JSON is deterministic.
+This produces valid strong ETags per RFC 9110 with deterministic JSON.
 """
 
 import hashlib
@@ -55,14 +54,15 @@ class ContentValidator:
         return e
 
     @staticmethod
-    def validate_parity(sitemap_hash: str, etag: str, payload_hash: str) -> bool:
+    def validate_parity(sitemap_etag: str, response_etag: str, payload_hash: str) -> bool:
         """
-        Compliance check: sitemap contentHash == clean(ETag) == payload.hash
+        Compliance check: sitemap etag == HTTP ETag == payload.hash
+        Per draft-01 Section 7.3
         """
-        s = sitemap_hash.strip().strip('"')
+        s = sitemap_etag.strip().strip('"')
         if len(s) == 64 and all(c in '0123456789abcdef' for c in s.lower()):
             s = f'sha256-{s}'
-        e = ContentValidator.clean_etag(etag)
+        e = ContentValidator.clean_etag(response_etag)
         p = payload_hash.strip().strip('"')
         if len(p) == 64 and all(c in '0123456789abcdef' for c in p.lower()):
             p = f'sha256-{p}'
@@ -129,23 +129,24 @@ class ContentValidator:
         results['checks']['etag_weak'] = False
 
         if etag:
-            # Accept both strong ("sha256-...") and weak (W/"sha256-...") ETags
-            # TCT spec recommends strong ETags for universal cache compatibility
-            etag_clean = etag
-            if etag_clean.startswith('W/'):
+            # Per draft-01 Section 6.2: ETags MUST be strong (no W/ prefix)
+            if etag.startswith('W/'):
                 results['checks']['etag_weak'] = True
-                results['warnings'].append(
-                    'Weak ETag detected. TCT spec recommends strong ETags ("sha256-...") '
-                    'for universal cache compatibility (LiteSpeed Cache, Varnish, CDNs).'
+                results['errors'].append(
+                    'Weak ETag not allowed in draft-01. '
+                    'M-URLs MUST use strong ETags per Section 6.2.'
                 )
-                etag_clean = etag_clean[2:]
+                results['compliant'] = False
+                etag_clean = etag[2:]
+            else:
+                etag_clean = etag
 
             results['checks']['etag_format'] = (
                 etag_clean.startswith('"sha256-') or
                 etag_clean.startswith('sha256-')
             )
             if not results['checks']['etag_format']:
-                results['errors'].append("ETag should contain 'sha256-' hash")
+                results['errors'].append("ETag must be 'sha256-<64hex>' format")
                 results['compliant'] = False
         else:
             results['errors'].append("ETag header missing")
@@ -179,7 +180,7 @@ class ContentValidator:
     @staticmethod
     def validate_sitemap_item(item: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Validate a single sitemap item structure.
+        Validate a single sitemap item structure per draft-01 Section 7.1
 
         Args:
             item: Sitemap item dictionary
@@ -192,8 +193,8 @@ class ContentValidator:
             'errors': []
         }
 
-        # Check required fields
-        required_fields = ['cUrl', 'mUrl', 'contentHash']
+        # Check required fields per draft-01 Section 7.1
+        required_fields = ['cUrl', 'mUrl', 'etag']
         for field in required_fields:
             if field not in item:
                 results['errors'].append(f"Missing required field: {field}")
@@ -208,14 +209,14 @@ class ContentValidator:
             results['errors'].append("mUrl must be absolute URL")
             results['valid'] = False
 
-        # Check hash format
-        if 'contentHash' in item:
-            hash_val = item['contentHash']
-            if not (hash_val.startswith('sha256-') or re.match(r'^[a-f0-9]{64}$', hash_val)):
-                results['errors'].append("contentHash must be sha256 hash")
+        # Check etag format (must be sha256-<64hex>, no quotes)
+        if 'etag' in item:
+            etag_val = item['etag']
+            if not (etag_val.startswith('sha256-') and len(etag_val) == 71):
+                results['errors'].append("etag must be 'sha256-<64hex>' format (no quotes)")
                 results['valid'] = False
 
-        # Check modified date format (if present)
+        # Check modified date format (optional field)
         if 'modified' in item:
             modified = item['modified']
             if not re.match(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}', modified):

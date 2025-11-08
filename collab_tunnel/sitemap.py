@@ -1,5 +1,5 @@
 """
-Sitemap parser for TCT protocol
+Sitemap parser for TCT protocol (draft-jurkovikj-collab-tunnel-01)
 """
 
 from typing import Dict, List, Any, Optional
@@ -8,17 +8,18 @@ from datetime import datetime
 
 class SitemapParser:
     """
-    Parser for TCT JSON sitemaps.
+    Parser for TCT JSON sitemaps per draft-01 Section 7.1
 
     Expected sitemap format:
     {
         "version": 1,
+        "profile": "tct-1",
         "items": [
             {
                 "cUrl": "https://example.com/post/",
                 "mUrl": "https://example.com/post/llm/",
                 "modified": "2025-10-01T12:34:56Z",
-                "contentHash": "sha256-..."
+                "etag": "sha256-..."
             }
         ]
     }
@@ -46,7 +47,7 @@ class SitemapParser:
             raise ValueError("Sitemap 'items' must be an array")
 
         for idx, item in enumerate(self.data['items']):
-            required = ['cUrl', 'mUrl', 'contentHash']
+            required = ['cUrl', 'mUrl', 'etag']
             for field in required:
                 if field not in item:
                     raise ValueError(
@@ -121,5 +122,5 @@ class SitemapParser:
             'version': self.version,
             'estimated_total_bytes': total_size,
             'has_dates': sum(1 for item in self.items if 'modified' in item),
-            'has_hashes': sum(1 for item in self.items if 'contentHash' in item)
+            'has_etags': sum(1 for item in self.items if 'etag' in item)
         }
