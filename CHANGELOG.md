@@ -5,6 +5,51 @@ All notable changes to the collab-tunnel Python client library will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-11-09
+
+### BREAKING CHANGES
+
+This release updates the library to comply with **draft-jurkovikj-collab-tunnel-01**. Several breaking API changes have been made:
+
+#### 1. Sitemap Field Renamed
+- **Old:** `contentHash`
+- **New:** `etag`
+- **Impact:** Code accessing `item['contentHash']` will fail
+- **Migration:** Replace all `contentHash` references with `etag`
+
+```python
+# Before (1.x):
+for item in sitemap.items:
+    hash = item['contentHash']
+
+# After (2.0):
+for item in sitemap.items:
+    etag = item['etag']
+```
+
+#### 2. Weak ETags Now Rejected
+- **Old:** Weak ETags (`W/"..."`) generated warnings but were accepted
+- **New:** Weak ETags are rejected as non-compliant per draft-01 Section 6.2
+- **Impact:** Implementations using weak ETags will fail validation
+- **Migration:** Ensure M-URLs return strong ETags only (no `W/` prefix)
+
+#### 3. Validator Function Signature Changed
+- **Old:** `validate_parity(sitemap_hash, etag, payload_hash)`
+- **New:** `validate_parity(sitemap_etag, response_etag, payload_hash)`
+- **Impact:** Code using positional arguments with old parameter names
+- **Migration:** Update parameter names (functionality unchanged)
+
+### Changed
+- Updated all documentation and docstrings to reference draft-01
+- Updated `SitemapParser` to require `etag` field instead of `contentHash`
+- Updated `ContentValidator.validate_sitemap_item()` to check for `etag` field
+- Updated `CollabTunnelCrawler.should_fetch()` to use `etag` for zero-fetch optimization
+- Updated error messages to specify draft-01 section references
+
+### Removed
+- Removed all references to Method B (draft-01 only allows Method A)
+- Removed support for weak ETags in validator
+
 ## [1.0.1] - 2025-10-31
 
 ### Fixed
